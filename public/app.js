@@ -278,3 +278,300 @@ document.getElementById('wishBnav').addEventListener('click',()=>{
 document.getElementById('burgerBtn').addEventListener('click',()=>document.getElementById('mobMenu').classList.add('open'));
 document.getElementById('mobX').addEventListener('click',closeMob);
 document.getElementById('mobOv').addEventListener('click',close
+function openLogin(){
+  document.getElementById('loginInp').value='';
+  document.getElementById('loginErr').style.display='none';
+  document.getElementById('loginAttempts').style.display='none';
+  document.getElementById('btnLogin').disabled=false;
+  document.getElementById('loginOv').classList.add('open');
+  setTimeout(()=>document.getElementById('loginInp').focus(),350);
+}
+function closeLogin(){ document.getElementById('loginOv').classList.remove('open'); }
+
+async function checkLogin(){
+  const pwd=document.getElementById('loginInp').value;
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+
+  const { ok, status, data } = await api('/admin/login', {
+    method: 'POST',
+    body: JSON.stringify({ password: pwd })
+  });
+
+  if(ok){
+    isAdmin = true;
+    closeLogin();
+    openAdmin();
+  } else if(status === 429){
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('loginErr').textContent=`🔒 Trop d'essais — bloqué ${data.remainingMinutes} min`;
+  } else {
+    document.getElementById('loginInp').value='';
+    document.getElementById('loginErr').style.display='block';
+    const rem = data.remainingAttempts ?? 0;
+    document.getElementById('loginErr').textContent=`❌ Mot de passe incorrect (${rem} essai${rem>1?'s':''} restant${rem>1?'s':''})`;
+    if(rem > 0){
+      const att=document.getElementById('loginAttempts');
+      att.style.display='block';
+      att.textContent=`Tentative ${5-rem}/5`;
+    }
+    btn.disabled=false;
+    document.getElementById('loginInp').focus();
+  }
+  btn.disabled=false;
+}
+
+async function checkAdminStatus(){
+  const { ok, data } = await api('/admin/check');
+  isAdmin = ok && data.isAdmin;
+  return isAdmin;
+}
+
+async function openAdmin(){
+  const ok = await checkAdminStatus();
+  if(!ok){ openLogin(); return; }
+  document.getElementById('adminPanel').classList.add('open');
+  await renderAdminList();
+}
+function closeAdmin(){ document.getElementById('adminPanel').classList.remove('open'); }
+async function logout(){
+  await api('/admin/logout', { method: 'POST' });
+  isAdmin=false; closeAdmin(); toast('Déconnecté ✓');
+}
+document.getElementById('adminX').addEventListener('click',closeAdmin);
+
+document.querySelectorAll('.atab').forEach(tab=>{
+  tab.addEventListener('click',async ()=>{
+    document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.atc').forEach(c=>c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+    if(tab.dataset.tab==='list') await renderAdminList();
+    if(tab.dataset.tab==='orders') await renderOrdersList();
+  });
+});
+
+function previewImg(){
+  const url=document.getElementById('f-img').value.trim();
+  const w=document.getElementById('imgPrev');
+  if(!url){w.innerHTML='<span>Aperçu de l\'image ici</span>';return;}
+  w.innerHTML=`<img src="${url}" onerror="this.parentElement.innerHTML='<span>❌ Image non accessible</span>'" style="max-height:80px;max-width:100%;object-fit:contain">`;
+}
+
+async function saveProduct(){
+  const name=document.getElementById('f-name').value.trim();
+  const cat=document.getElementById('f-cat').value;
+  const priceS=document.getElementById('f-price').value;
+  const oldS=document.getElementById('f-oldprice').value;
+  const badge=document.getElementById('f-badge').value;
+  const img=document.getElementById('f-img').value.trim();
+  const link=document.getElementById('f-link').value.trim();
+  const emoji=document.getElementById('f-emoji').value.trim()||'👗';
+  const rating=parseFloat(document.getElementById('f-rating').value)||4.5;
+  const editId=document.getElementById('editId').value;
+
+  if(!name||!cat||!priceS||!link){toast('Remplis les champs obligatoires (*)');return;}
+  const price=parseFloat(priceS);
+  if(isNaN(price)||price<=0){toast('Prix invalide');return;}
+
+  const payload = { name, cat, price, oldPrice: oldS?parseFloat(oldS):null, badge: badge||null, img, link, emoji, rating };
+
+  let result;
+  if(editId){
+    result = await api(`/admin/products/${editId}`, { method:'PUT', body: JSON.stringify(payload) });
+  } else {
+    result = await api('/admin/products', { method:'POST', body: JSON.stringify(payload) });
+  }
+
+  if(result.ok){
+    toast(editId ? 'Produit mis à jour ✓' : 'Produit ajouté ✓');
+    await loadProducts();
+    resetForm();
+    document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.atc').forEach(c=>c.classList.remove('active'));
+    document.querySelector('[data-tab="list"]').classList.add('active');
+    document.getElementById('tab-list').classList.add('active');
+    await renderAdminList();
+  } else {
+    toast('Erreur lors de l\'enregistrement');
+  }
+}
+
+function resetForm(){
+  ['f-name','f-cat','f-price','f-oldprice','f-badge','f-img','f-link'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-emoji').value='👗';
+  document.getElementById('f-rating').value='4.5';
+  document.getElementById('editId').value='';
+  document.getElementById('saveBtn').textContent='✓ Enregistrer';
+  document.getElementById('imgPrev').innerHTML='<span>Aperçu de l\'image ici</span>';
+}
+
+function editProduct(id){
+  const p=products.find(x=>x.id===id); if(!p)return;
+  document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.atc').forEach(c=>c.classList.remove('active'));
+  document.querySelector('[data-tab="add"]').classList.add('active');
+  document.getElementById('tab-add').classList.add('active');
+  document.getElementById('f-name').value=p.name;
+  document.getElementById('f-cat').value=p.cat;
+  document.getElementById('f-price').value=p.price;
+  document.getElementById('f-oldprice').value=p.oldPrice||'';
+  document.getElementById('f-badge').value=p.badge||'';
+  document.getElementById('f-img').value=p.img||'';
+  document.getElementById('f-link').value=p.link||'';
+  document.getElementById('f-emoji').value=p.emoji||'👗';
+  document.getElementById('f-rating').value=p.rating||4.5;
+  document.getElementById('editId').value=p.id;
+  document.getElementById('saveBtn').textContent='✓ Mettre à jour';
+  previewImg();
+  document.getElementById('adminPanel').scrollTop=0;
+}
+
+async function deleteProduct(id){
+  if(!confirm('Supprimer ce produit ?'))return;
+  const { ok } = await api(`/admin/products/${id}`, { method: 'DELETE' });
+  if(ok){
+    await loadProducts();
+    await renderAdminList();
+    toast('Produit supprimé');
+  } else {
+    toast('Erreur lors de la suppression');
+  }
+}
+
+async function renderAdminList(){
+  const { ok, data } = await api('/admin/products');
+  if(!ok){ toast('Erreur de chargement'); return; }
+  const allProducts = data.products;
+  document.getElementById('prodCount').textContent = allProducts.length;
+  const list=document.getElementById('apList');
+  if(!allProducts.length){
+    list.innerHTML=`<div class="ap-empty">Aucun produit — ajoutez-en via l'onglet "Ajouter" !</div>`;
+    return;
+  }
+  list.innerHTML=allProducts.map(p=>`
+    <div class="ap-item">
+      <div class="ap-img">
+        ${p.img?`<img src="${p.img}" alt="${p.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}
+        <span style="${p.img?'display:none':'display:flex'};width:100%;height:100%;align-items:center;justify-content:center">${p.emoji||'👗'}</span>
+      </div>
+      <div class="ap-info">
+        <div class="ap-name">${p.name}</div>
+        <div class="ap-meta">${p.cat}${p.badge?' · '+p.badge:''}${p.link?' · 🔗':''}</div>
+      </div>
+      <div class="ap-price">${p.price.toFixed(2)}€</div>
+      <div class="ap-btns">
+        <button class="btn-edit" onclick="editProduct(${p.id})" title="Modifier">✏️</button>
+        <button class="btn-del" onclick="deleteProduct(${p.id})" title="Supprimer">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+const STATUS_LABELS = {
+  pending: '⏳ En attente paiement',
+  paid: '💰 Payée — à commander',
+  sourcing: '🛒 En cours de sourcing',
+  shipped: '📦 Expédiée',
+  delivered: '✅ Livrée',
+  cancelled: '❌ Annulée'
+};
+
+async function renderOrdersList(){
+  const { ok, data } = await api('/admin/orders');
+  if(!ok){ toast('Erreur de chargement des commandes'); return; }
+  const orders = data.orders;
+  document.getElementById('orderCount').textContent = orders.length;
+
+  const pendingCount = orders.filter(o => ['pending','paid','sourcing'].includes(o.status)).length;
+  const totalAmount = orders.reduce((s,o) => s + o.total_amount, 0);
+  document.getElementById('statPending').textContent = pendingCount;
+  document.getElementById('statTotal').textContent = totalAmount.toFixed(0)+'€';
+
+  const list = document.getElementById('ordersList');
+  if(!orders.length){
+    list.innerHTML = `<div class="ap-empty">Aucune commande pour l'instant.</div>`;
+    return;
+  }
+
+  list.innerHTML = orders.map(o => `
+    <div class="order-card">
+      <div class="order-card-hd">
+        <div>
+          <div class="order-num-tag">${o.order_number}</div>
+          <div class="order-date">${new Date(o.created_at).toLocaleString('fr-FR')}</div>
+        </div>
+        <select class="order-status-sel" onchange="updateOrderStatus(${o.id}, this.value)">
+          ${Object.entries(STATUS_LABELS).map(([val,lbl])=>`<option value="${val}" ${o.status===val?'selected':''}>${lbl}</option>`).join('')}
+        </select>
+      </div>
+      <div class="order-customer">
+        <strong>${o.customer_name}</strong> · ${o.customer_email}${o.customer_phone?' · '+o.customer_phone:''}<br>
+        ${o.address_line}, ${o.address_zip} ${o.address_city}, ${o.address_country}
+        <span class="payment-pill ${o.stripe_payment_status==='paid'?'pp-paid':'pp-unpaid'}" style="margin-left:6px">${o.stripe_payment_status==='paid'?'Payé':'Non payé'}</span>
+      </div>
+      <div class="order-items-list">
+        ${o.items.map(it => `
+          <div class="order-item-row">
+            <input type="checkbox" class="oi-sourced-check" ${it.sourced?'checked':''} onchange="toggleItemSourced(${it.id})" title="Marquer comme commandé sur Aliexpress/Temu">
+            <span class="oi-name">${it.product_name} x${it.quantity}</span>
+            ${it.source_link?`<a href="${it.source_link}" target="_blank" rel="noopener">🔗 Source</a>`:''}
+          </div>`).join('')}
+      </div>
+      <div class="order-total-row">
+        <span>Total commande</span>
+        <span>${o.total_amount.toFixed(2)} €</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function updateOrderStatus(orderId, status){
+  const { ok } = await api(`/admin/orders/${orderId}/status`, { method:'PUT', body: JSON.stringify({ status }) });
+  if(ok){ toast('Statut mis à jour ✓'); }
+  else { toast('Erreur de mise à jour'); }
+}
+
+async function toggleItemSourced(itemId){
+  const { ok } = await api(`/admin/order-items/${itemId}/sourced`, { method:'PUT' });
+  if(!ok) toast('Erreur');
+}
+
+async function changePwd(){
+  const p1=document.getElementById('newPwd1').value;
+  const p2=document.getElementById('newPwd2').value;
+  if(!p1){toast('Entrez un mot de passe');return;}
+  if(p1.length<6){toast('Minimum 6 caractères');return;}
+  if(p1!==p2){toast('Les mots de passe ne correspondent pas');return;}
+
+  const { ok } = await api('/admin/change-password', { method:'POST', body: JSON.stringify({ newPassword: p1 }) });
+  if(ok){
+    document.getElementById('newPwd1').value='';
+    document.getElementById('newPwd2').value='';
+    toast('Mot de passe mis à jour ✓');
+  } else {
+    toast('Erreur lors du changement');
+  }
+}
+
+function clearAll(){
+  toast('Pour supprimer tous les produits, fais-le un par un depuis l\'onglet Produits (sécurité)');
+}
+
+function subscribeNl(){
+  const v=document.getElementById('nlEmail').value;
+  if(!v.includes('@')){toast('E-mail invalide');return;}
+  toast('Inscription confirmée 🎉');
+  document.getElementById('nlEmail').value='';
+}
+
+let tTimer;
+function toast(msg){
+  clearTimeout(tTimer);
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toast').classList.add('show');
+  tTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
+}
+
+updateCart();
+loadProducts();
+checkAdminStatus();
