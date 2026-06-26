@@ -193,3 +193,187 @@
   </div>
   <div class="f-bottom">
     <div class="f-copy">©
+  </div>
+</footer>
+
+<!-- ══ BOTTOM NAV MOBILE ══ -->
+<nav class="bottom-nav">
+  <a href="#" class="bnav-item active"><span class="bnav-ico">🏠</span>Accueil</a>
+  <a href="#categories" class="bnav-item"><span class="bnav-ico">🏷️</span>Catégories</a>
+  <button class="bnav-item" id="cartBnav"><span class="bnav-ico">🛒<span class="bnav-badge" id="bnavBadge">0</span></span>Panier</button>
+  <button class="bnav-item" id="wishBnav"><span class="bnav-ico">♡</span>Favoris</button>
+</nav>
+
+<!-- ══ CART DRAWER ══ -->
+<div class="cart-ov" id="cartOv"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-hd">
+    <h2>🛒 Mon Panier</h2>
+    <button class="cart-x" id="cartX">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody">
+    <div class="cart-empty"><div class="eico">🛒</div><p>Votre panier est vide</p></div>
+  </div>
+  <div class="cart-ft">
+    <div class="cart-tot">
+      <span class="cart-tot-lbl">Total estimé</span>
+      <span class="cart-tot-val" id="cartTotVal">0 €</span>
+    </div>
+    <button class="btn-checkout" onclick="openCheckout()">Passer commande →</button>
+    <p style="font-size:11px;color:var(--grey);text-align:center;margin-top:10px;line-height:1.5">Paiement sécurisé · Livraison sous 7-15 jours</p>
+  </div>
+</div>
+
+<!-- ══ CHECKOUT (vraie commande sur le site) ══ -->
+<div class="checkout-view" id="checkoutView">
+  <div class="checkout-hd">
+    <button class="checkout-back" id="checkoutBack" onclick="closeCheckout()">←</button>
+    <h2>Finaliser ma commande</h2>
+  </div>
+  <div class="checkout-body" id="checkoutBody">
+    <!-- Rempli dynamiquement par app.js -->
+  </div>
+</div>
+
+<!-- ══ LOGIN ADMIN ══ -->
+<div class="login-ov" id="loginOv">
+  <div class="login-box">
+    <div class="login-ico">🔐</div>
+    <div class="login-ttl">Accès Admin</div>
+    <p class="login-sub">Zone réservée — entrez votre mot de passe</p>
+    <input type="password" class="login-inp" id="loginInp" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')checkLogin()">
+    <div class="login-err" id="loginErr">❌ Mot de passe incorrect</div>
+    <div class="login-attempts" id="loginAttempts"></div>
+    <button class="btn-login" id="btnLogin" onclick="checkLogin()">🔓 Entrer</button>
+    <button class="btn-login-cancel" onclick="closeLogin()">Annuler</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN PANEL ══ -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-box">
+    <div class="admin-hdr">
+      <h2>⚙️ Admin <span>FitFemme</span></h2>
+      <div class="admin-hdr-r">
+        <button class="btn-logout" onclick="logout()">🚪 Quitter</button>
+        <button class="admin-x" id="adminX">✕</button>
+      </div>
+    </div>
+    <div class="admin-body">
+      <div class="atabs">
+        <button class="atab active" data-tab="add">➕ Ajouter</button>
+        <button class="atab" data-tab="list">📋 Produits (<span id="prodCount">0</span>)</button>
+        <button class="atab" data-tab="settings">⚙ Réglages</button>
+        <button class="atab" data-tab="orders">📦 Commandes (<span id="orderCount">0</span>)</button>
+      </div>
+
+      <!-- TAB AJOUTER -->
+      <div class="atc active" id="tab-add">
+        <div class="fg">
+          <label class="flbl">Nom du produit *</label>
+          <input type="text" class="finp" id="f-name" placeholder="ex: Legging Push-Up Taille Haute Noir" autocomplete="off">
+        </div>
+        <div class="fg2">
+          <div class="fg">
+            <label class="flbl">Catégorie *</label>
+            <select class="fsel" id="f-cat">
+              <option value="">-- Choisir --</option>
+              <option value="leggings">🩱 Leggings</option>
+              <option value="hauts">👕 Hauts</option>
+              <option value="vestes">🧥 Vestes</option>
+              <option value="accessoires">🎽 Accessoires</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flbl">Badge</label>
+            <select class="fsel" id="f-badge">
+              <option value="">Aucun</option>
+              <option value="new">✨ Nouveau</option>
+              <option value="sale">🔥 Solde</option>
+              <option value="hot">⚡ Tendance</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flbl">Prix (€) *</label>
+            <input type="number" class="finp" id="f-price" placeholder="19.99" step="0.01" inputmode="decimal" min="0">
+          </div>
+          <div class="fg">
+            <label class="flbl">Prix barré (€)</label>
+            <input type="number" class="finp" id="f-oldprice" placeholder="39.99 (optionnel)" step="0.01" inputmode="decimal" min="0">
+          </div>
+        </div>
+        <div class="fg">
+          <label class="flbl">🖼️ URL Image produit</label>
+          <input type="url" class="finp" id="f-img" placeholder="https://ae01.alicdn.com/..." oninput="previewImg()" inputmode="url" autocomplete="off">
+          <div class="fhint">Clic droit sur la photo → "Copier l'adresse de l'image" sur Aliexpress ou Temu</div>
+          <div class="img-prev" id="imgPrev"><span>Aperçu de l'image ici</span></div>
+        </div>
+        <div class="fg">
+          <label class="flbl">🔗 Lien produit (Aliexpress / Temu) *</label>
+          <input type="url" class="finp" id="f-link" placeholder="https://fr.aliexpress.com/item/..." inputmode="url" autocomplete="off">
+          <div class="fhint">Les clientes seront redirigées ici pour acheter</div>
+        </div>
+        <div class="fg2">
+          <div class="fg">
+            <label class="flbl">Emoji (si pas d'image)</label>
+            <input type="text" class="finp" id="f-emoji" placeholder="🩱" maxlength="4" value="👗">
+          </div>
+          <div class="fg">
+            <label class="flbl">Note (/5)</label>
+            <input type="number" class="finp" id="f-rating" placeholder="4.5" min="1" max="5" step="0.1" value="4.5" inputmode="decimal">
+          </div>
+        </div>
+        <div class="f-actions">
+          <button class="btn-reset" onclick="resetForm()">↺ Vider</button>
+          <button class="btn-save" id="saveBtn" onclick="saveProduct()">✓ Enregistrer</button>
+        </div>
+        <input type="hidden" id="editId" value="">
+      </div>
+
+      <!-- TAB LISTE -->
+      <div class="atc" id="tab-list">
+        <div class="ap-list" id="apList">
+          <div class="ap-empty">Aucun produit — ajoutez-en via l'onglet "Ajouter" !</div>
+        </div>
+      </div>
+
+      <!-- TAB RÉGLAGES -->
+      <div class="atc" id="tab-settings">
+        <div class="fg">
+          <label class="flbl">🔑 Nouveau mot de passe admin</label>
+          <input type="password" class="finp" id="newPwd1" placeholder="Nouveau mot de passe (min. 6 caractères)" autocomplete="new-password">
+        </div>
+        <div class="fg">
+          <label class="flbl">Confirmer le mot de passe</label>
+          <input type="password" class="finp" id="newPwd2" placeholder="Répéter le mot de passe" autocomplete="new-password">
+        </div>
+        <div style="margin-top:14px">
+          <button class="btn-save" onclick="changePwd()" style="width:100%">💾 Changer le mot de passe</button>
+        </div>
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+          <div class="flbl" style="color:#FF8888;margin-bottom:10px">⚠️ Zone dangereuse</div>
+          <button onclick="clearAll()" style="width:100%;background:rgba(220,50,50,.1);color:#FF8888;border:1px solid rgba(220,50,50,.2);padding:14px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'Inter',sans-serif;border-radius:10px;min-height:48px">🗑️ Supprimer TOUS les produits</button>
+        </div>
+      </div>
+
+      <!-- TAB COMMANDES -->
+      <div class="atc" id="tab-orders">
+        <div class="admin-stat-row">
+          <div class="admin-stat"><div class="admin-stat-val" id="statPending">0</div><div class="admin-stat-lbl">À traiter</div></div>
+          <div class="admin-stat"><div class="admin-stat-val" id="statTotal">0€</div><div class="admin-stat-lbl">Total commandes</div></div>
+        </div>
+        <div class="banner-info">📦 Quand une commande arrive, va sur chaque lien Aliexpress/Temu listé, commande l'article et coche-le comme "sourcé". Mets à jour le statut au fil de l'avancement.</div>
+        <div id="ordersList">
+          <div class="ap-empty">Aucune commande pour l'instant.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"><div class="td"></div><span id="toastMsg"></span></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
