@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FITFEMME — Sport & Performance</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav class="top-nav">
+  <button class="burger-btn" id="burgerBtn" aria-label="Menu">☰</button>
+  <a href="#" class="nav-logo">FIT<span>FEMME</span></a>
+  <ul class="nav-links">
+    <li><a href="#categories">Catégories</a></li>
+    <li><a href="#products">Produits</a></li>
+    <li><a href="#products">Nouveautés</a></li>
+    <li><a href="#products">Soldes 🔥</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" id="cartNavBtn" aria-label="Panier">🛒<span class="cart-badge" id="cartBadge">0</span></button>
+  </div>
+</nav>
+
+<!-- ══ MENU MOBILE ══ -->
+<div class="mob-menu" id="mobMenu">
+  <div class="mob-ov" id="mobOv"></div>
+  <div class="mob-drawer">
+    <div class="mob-top">
+      <div class="mob-logo-txt">FIT<span>FEMME</span></div>
+      <button class="mob-x" id="mobX">✕</button>
+    </div>
+    <a href="#categories" class="mob-link" onclick="closeMob()"><span class="ico">🏷️</span>Catégories</a>
+    <a href="#products" class="mob-link" onclick="closeMob()"><span class="ico">👗</span>Tous les produits</a>
+    <a href="#products" class="mob-link" onclick="filterByCategory('hauts');closeMob()"><span class="ico">👕</span>Hauts & Brassières</a>
+    <a href="#products" class="mob-link" onclick="filterByCategory('leggings');closeMob()"><span class="ico">🩱</span>Leggings</a>
+    <a href="#products" class="mob-link" onclick="filterByCategory('vestes');closeMob()"><span class="ico">🧥</span>Vestes</a>
+    <a href="#products" class="mob-link" onclick="filterCat('soldes');closeMob()"><span class="ico">🔥</span>Soldes</a>
+    <div class="mob-footer-zone">
+      <!-- Zone secrète : 7 taps rapides → accès admin -->
+      <span class="secret-dots" id="secretMob" onclick="secretTap()">· · ·</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-gradient"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Nouvelle Collection 2026</div>
+    <h1 class="hero-title">DÉPASSE<br><span class="line2">TES LIMITES</span></h1>
+    <p class="hero-sub">Des tenues sport conçues pour la femme qui ne s'arrête jamais. <strong>Performance, style, confiance</strong> — à chaque séance.</p>
+    <div class="hero-ctas">
+      <a href="#products" class="btn-primary">Voir la collection</a>
+      <a href="#categories" class="btn-outline">Explorer</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-val">500+</div><div class="stat-lbl">Références</div></div>
+      <div><div class="stat-val">4.9★</div><div class="stat-lbl">Note moy.</div></div>
+      <div><div class="stat-val">-70%</div><div class="stat-lbl">Jusqu'à</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PROMO BANNER ══ -->
+<div class="promo-banner">
+  🚚 <span>Livraison gratuite dès 40€</span>
+  &nbsp;·&nbsp;
+  🏷️ <span>-70% sur les soldes</span>
+  &nbsp;·&nbsp;
+  🌟 <span>Code FITFEMME10 = -10%</span>
+</div>
+
+<!-- ══ CATÉGORIES ══ -->
+<section class="sw" id="categories" style="background:var(--bg2)">
+  <div class="s-head">
+    <div class="s-eye">Explorer par univers</div>
+    <h2 class="s-ttl">NOS <span>CATÉGORIES</span></h2>
+  </div>
+  <div class="cats-grid">
+    <div class="cat-card" onclick="filterByCategory('leggings')">
+      <div class="cat-bg cb1"></div><div class="cat-ov"></div>
+      <div class="cat-ico">🩱</div>
+      <div class="cat-cnt"><div class="cat-name">Leggings</div><div class="cat-sub">Push-up · Taille haute</div><div class="cat-arr">Voir →</div></div>
+    </div>
+    <div class="cat-card" onclick="filterByCategory('hauts')">
+      <div class="cat-bg cb2"></div><div class="cat-ov"></div>
+      <div class="cat-ico">👕</div>
+      <div class="cat-cnt"><div class="cat-name">Hauts</div><div class="cat-sub">Brassières · Crop tops</div><div class="cat-arr">Voir →</div></div>
+    </div>
+    <div class="cat-card" onclick="filterByCategory('vestes')">
+      <div class="cat-bg cb3"></div><div class="cat-ov"></div>
+      <div class="cat-ico">🧥</div>
+      <div class="cat-cnt"><div class="cat-name">Vestes</div><div class="cat-sub">Zip · Coupe-vent</div><div class="cat-arr">Voir →</div></div>
+    </div>
+    <div class="cat-card" onclick="filterByCategory('accessoires')">
+      <div class="cat-bg cb4"></div><div class="cat-ov"></div>
+      <div class="cat-ico">🎽</div>
+      <div class="cat-cnt"><div class="cat-name">Accessoires</div><div class="cat-sub">Sacs · Gourdes</div><div class="cat-arr">Voir →</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PRODUITS ══ -->
+<section class="sw" id="products">
+  <div class="s-head">
+    <div class="s-eye">Sélection du moment</div>
+    <h2 class="s-ttl">NOS <span>PRODUITS</span></h2>
+  </div>
+  <div class="filter-scroll">
+    <div class="filter-row" id="filterRow">
+      <button class="fbtn active" data-filter="all">Tous</button>
+      <button class="fbtn" data-filter="leggings">🩱 Leggings</button>
+      <button class="fbtn" data-filter="hauts">👕 Hauts</button>
+      <button class="fbtn" data-filter="vestes">🧥 Vestes</button>
+      <button class="fbtn" data-filter="accessoires">🎽 Accessoires</button>
+      <button class="fbtn" data-filter="soldes">🔥 Soldes</button>
+    </div>
+  </div>
+  <div class="prods-grid" id="prodsGrid"></div>
+  <div class="load-wrap" id="loadWrap">
+    <button class="btn-primary" id="loadMoreBtn" style="border-radius:100px">Voir plus de produits</button>
+  </div>
+</section>
+
+<!-- ══ AVANTAGES ══ -->
+<section class="sw" style="background:var(--bg2);padding-top:0">
+  <div class="benefits-grid">
+    <div class="benefit"><span class="b-ico">🚀</span><div class="b-ttl">Livraison rapide</div><div class="b-txt">Expédié en 24h, reçu en 7–15 jours</div></div>
+    <div class="benefit"><span class="b-ico">💰</span><div class="b-ttl">Prix imbattables</div><div class="b-txt">Directement Aliexpress & Temu</div></div>
+    <div class="benefit"><span class="b-ico">🔄</span><div class="b-ttl">Retours faciles</div><div class="b-txt">Satisfaite ou remboursée, 30 jours</div></div>
+    <div class="benefit"><span class="b-ico">🛡️</span><div class="b-ttl">Paiement sécurisé</div><div class="b-txt">Tous les moyens de paiement</div></div>
+  </div>
+</section>
+
+<!-- ══ NEWSLETTER ══ -->
+<section class="sw">
+  <div class="nl-box">
+    <div class="s-eye" style="text-align:center;margin-bottom:8px">Rejoindre la communauté</div>
+    <h2 class="nl-ttl">RESTEZ <span style="color:var(--pink)">CONNECTÉE</span></h2>
+    <p class="nl-sub">Nouveautés, codes promo, conseils fitness — directement dans votre boîte mail.</p>
+    <div class="nl-form">
+      <input type="email" class="nl-input" placeholder="votre@email.com" id="nlEmail" inputmode="email">
+      <button class="nl-submit" onclick="subscribeNl()">S'inscrire</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="f-brand">
+    <div class="f-logo">FIT<span>FEMME</span></div>
+    <p class="f-desc">La boutique sport 100% féminine. Performance et style pour chaque séance.</p>
+    <div class="f-socials">
+      <a href="#" class="f-soc">📸</a>
+      <a href="#" class="f-soc">🎵</a>
+      <a href="#" class="f-soc">📌</a>
+    </div>
+  </div>
+  <div class="f-cols">
+    <div class="f-col">
+      <h4>Collections</h4>
+      <ul>
+        <li><a href="#">Leggings</a></li>
+        <li><a href="#">Brassières</a></li>
+        <li><a href="#">Vestes sport</a></li>
+        <li><a href="#">Accessoires</a></li>
+      </ul>
+    </div>
+    <div class="f-col">
+      <h4>Aide</h4>
+      <ul>
+        <li><a href="#">Guide des tailles</a></li>
+        <li><a href="#">Livraison</a></li>
+        <li><a href="#">Retours</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div class="f-col">
+      <h4>La boutique</h4>
+      <ul>
+        <li><a href="#">À propos</a></li>
+        <li><a href="#">Blog fitness</a></li>
+        <li><a href="#">Partenaires</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <div class="f-copy">©
