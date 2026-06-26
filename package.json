@@ -1,0 +1,13 @@
+{
+  "name": "fitfemme-boutique",
+  "version": "1.0.0",
+  "description": "Boutique FitFemme - backend Node.js pur (zéro dépendance) + SQLite natif",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "dependencies": {}
+}
