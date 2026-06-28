@@ -1,6 +1,7 @@
 // ════════════════════════════════════════════
 //  index.js — Serveur HTTP principal (Node.js pur, sans dépendances)
 //  Boutique FitFemme : API produits, commandes, admin
+//  Version corrigée : Content-Type strict + no-cache sur les fichiers statiques
 // ════════════════════════════════════════════
 const http = require('node:http');
 const fs = require('node:fs');
@@ -14,21 +15,20 @@ const auth = require('./auth');
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
-// ── MIME types pour servir les fichiers statiques ──
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon'
+  '.ico': 'image/x-icon',
+  '.webp': 'image/webp'
 };
 
-// ════════════════════════════════════════════
-//  HELPERS
-// ════════════════════════════════════════════
 function getClientIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
 }
@@ -62,17 +62,11 @@ function rowToProduct(row) {
   };
 }
 
-// ════════════════════════════════════════════
-//  ROUTES API — PRODUITS (public)
-// ════════════════════════════════════════════
 function handleGetProducts(req, res) {
   const rows = db.prepare('SELECT * FROM products WHERE active = 1 ORDER BY created_at DESC').all();
   sendJSON(res, 200, { products: rows.map(rowToProduct) });
 }
 
-// ════════════════════════════════════════════
-//  ROUTES API — ADMIN AUTH
-// ════════════════════════════════════════════
 async function handleAdminLogin(req, res) {
   const ip = getClientIp(req);
   const allowed = auth.checkLoginAllowed(ip);
@@ -117,9 +111,6 @@ async function handleChangePassword(req, res) {
   sendJSON(res, 200, { success: true });
 }
 
-// ════════════════════════════════════════════
-//  ROUTES API — ADMIN PRODUITS (CRUD)
-// ════════════════════════════════════════════
 function handleAdminGetProducts(req, res) {
   if (!requireAdmin(req)) return sendJSON(res, 401, { error: 'unauthorized' });
   const rows = db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
@@ -176,9 +167,6 @@ function handleDeleteProduct(req, res, id) {
   sendJSON(res, 200, { success: true });
 }
 
-// ════════════════════════════════════════════
-//  ROUTES API — COMMANDES
-// ════════════════════════════════════════════
 async function handleCreateOrder(req, res) {
   const b = await readBody(req);
   const { customer, items } = b;
@@ -190,7 +178,6 @@ async function handleCreateOrder(req, res) {
     return sendJSON(res, 400, { error: 'empty_cart' });
   }
 
-  // Recalcul du total côté serveur (ne JAMAIS faire confiance au total envoyé par le client)
   let total = 0;
   const validatedItems = [];
   for (const it of items) {
@@ -258,34 +245,52 @@ async function handleToggleItemSourced(req, res, itemId) {
   sendJSON(res, 200, { success: true });
 }
 
-// ════════════════════════════════════════════
-//  FICHIERS STATIQUES
-// ════════════════════════════════════════════
 function serveStatic(req, res, urlPath) {
-  let filePath = urlPath === '/' ? '/index.html' : urlPath;
-  filePath = path.join(PUBLIC_DIR, filePath);
+  let cleanPath = urlPath.split('?')[0].split('#')[0];
+  let filePath = cleanPath === '/' ? '/index.html' : cleanPath;
+  const resolvedPath = path.join(PUBLIC_DIR, filePath);
 
-  if (!filePath.startsWith(PUBLIC_DIR)) {
-    res.writeHead(403); return res.end('Forbidden');
+  if (!resolvedPath.startsWith(PUBLIC_DIR)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    return res.end('Forbidden');
   }
 
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      return fs.readFile(path.join(PUBLIC_DIR, 'index.html'), (err2, indexData) => {
-        if (err2) { res.writeHead(404); return res.end('Not found'); }
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  fs.stat(resolvedPath, (err, stats) => {
+    if (err || !stats.isFile()) {
+      const indexPath = path.join(PUBLIC_DIR, 'index.html');
+      return fs.readFile(indexPath, (err2, indexData) => {
+        if (err2) {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          return res.end('Not found');
+        }
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store'
+        });
         res.end(indexData);
       });
     }
-    const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
-    res.end(data);
+
+    fs.readFile(resolvedPath, (readErr, data) => {
+      if (readErr) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        return res.end('Internal server error');
+      }
+      const ext = path.extname(resolvedPath).toLowerCase();
+      const contentType = MIME[ext] || 'application/octet-stream';
+
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Content-Length': data.length,
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      res.end(data);
+    });
   });
 }
 
-// ════════════════════════════════════════════
-//  ROUTER PRINCIPAL
-// ════════════════════════════════════════════
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const p = url.pathname;
@@ -327,3 +332,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`\n🏃‍♀️ FitFemme server running → http://localhost:${PORT}\n`);
 });
+
+
